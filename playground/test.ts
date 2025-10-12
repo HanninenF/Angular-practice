@@ -179,17 +179,17 @@ const gateGuard = new Proxy(house as any, {
     if (typeof doorHandle !== 'function') return doorHandle;
 
     // Binda dörrhandtaget till huset (så this pekar rätt)
-    const boundDoor = doorHandle.bind(houseTarget);
+    const installedDoorHandle = doorHandle.bind(houseTarget);
 
     // 🚪 Om det är just doorA, sätt en dörrvakt framför (funktion-proxy)
     if (door === 'doorA') {
-      return new Proxy(boundDoor, {
+      return new Proxy(installedDoorHandle, {
         apply(
           doorFn: (parcel: Parcel) => [ParcelLabel, Content],
-          thisHouse: RealEstate,
-          args: [Parcel]
+          targetHouse: RealEstate,
+          parcelPallet: [Parcel]
         ): [ParcelLabel, Content] {
-          const incomingParcel = args[0];
+          const incomingParcel = parcelPallet[0];
 
           // 🏷️ Byt etikett X ↔ Y innan paketet släpps in
           const relabeled: Parcel = {
@@ -201,13 +201,13 @@ const gateGuard = new Proxy(house as any, {
           console.log('👮‍♂️ Dörrvakt bytte etiketten till:', relabeled.label);
 
           // Lämna in paketet till dörren med den nya etiketten
-          return Reflect.apply(doorFn, thisHouse, [relabeled]);
+          return Reflect.apply(doorFn, targetHouse, [relabeled]);
         },
       });
     }
 
     // Andra dörrar: ingen extra vakt, kör som vanligt
-    return boundDoor;
+    return installedDoorHandle;
   },
 });
 
