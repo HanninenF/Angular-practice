@@ -37,6 +37,13 @@
           }
         }
       }
+    },
+    {
+      "label": "Run TS Playground",
+      "type": "npm",
+      "script": "test:ts",
+      "group": "test",
+      "problemMatcher": []
     }
   ]
 }
