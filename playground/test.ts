@@ -31,102 +31,6 @@ const doLog = (message: string) => console.log('arrow', message);
 log('hello');
 doLog('hello');
 
-enum Key {
-  x = 'x',
-  y = 'y',
-}
-
-class Point {
-  public constructor(x?: number, y?: number) {
-    this.x = x ?? 0;
-    this.y = y ?? 0;
-  }
-  public inc = {
-    incX: (incValue?: number): void => {
-      this.x += incValue ?? 1;
-    },
-    incY: (incValue?: number): void => {
-      this.y += incValue ?? 1;
-    },
-  };
-
-  public dec = {
-    decX: (decValue?: number): void => {
-      this.x -= decValue ?? 1;
-    },
-    decY: (decValue?: number): void => {
-      this.y -= decValue ?? 1;
-    },
-  };
-
-  //key metod
-  public keyInc(key: Key, v?: number) {
-    this[key] += v ?? 1;
-  }
-  public keyDec(key: Key, v?: number): [Key, number] {
-    this[key] -= v ?? 1;
-    return [key, this[key]];
-  }
-
-  //enum metod
-
-  public enumInc(key: Key, v?: number) {
-    this[key as Key] += v ?? 1;
-  }
-
-  public draw = (): number => {
-    return this.x + this.y;
-  };
-
-  public x: number;
-  private y: number;
-}
-
-//behövs inte med class Point
-/* const drawPoint = (point: Point) => {
-  return point.x + point.y;
-}; */
-const point = new Point(5, 5);
-point.inc.incX();
-point.inc.incX();
-point.inc.incX(2);
-point.dec.decX(2);
-point.dec.decX();
-point.dec.decX();
-point.keyInc(Key.x, 1);
-point.enumInc(Key.x, 1);
-console.log(point.draw());
-
-const point2 = new Point(1, 2);
-
-//proxy som ändrar värdet
-const proxy = new Proxy(point2 as any, {
-  get(target, prop, receiver) {
-    const value = target[prop as keyof typeof target];
-
-    if (typeof value !== 'function') return value;
-
-    const bound = value.bind(target);
-
-    if (prop === 'keyDec') {
-      return new Proxy(bound, {
-        apply(fn, thisArg, args: [Key, number?]) {
-          // Byt 'x' ↔ 'y' innan vi anropar originalmetoden
-          args[0] = args[0] !== Key.x ? Key.x : Key.y;
-
-          return Reflect.apply(fn, thisArg, args);
-        },
-      });
-    }
-
-    return bound;
-  },
-});
-
-//här blir x y istället, genom proxyn
-console.log("proxy.keyDec('x')", proxy.keyDec('x'));
-console.log(point2.x);
-
 type Content = number;
 
 // 🏷️ Etiketter (adresslappar) som pekar ut husets hyllor
@@ -225,3 +129,99 @@ console.log('EFTER:', house.shelves());
 // 👮‍♂️ Dörrvakt bytte etiketten till: LabelY
 // gateGuard.doorA(...) => [ 'LabelY', 4 ]
 // EFTER: { storageX: 5, storageY: 4 }
+
+enum Key {
+  x = 'x',
+  y = 'y',
+}
+
+class Point {
+  public constructor(x?: number, y?: number) {
+    this.x = x ?? 0;
+    this.y = y ?? 0;
+  }
+  public inc = {
+    incX: (incValue?: number): void => {
+      this.x += incValue ?? 1;
+    },
+    incY: (incValue?: number): void => {
+      this.y += incValue ?? 1;
+    },
+  };
+
+  public dec = {
+    decX: (decValue?: number): void => {
+      this.x -= decValue ?? 1;
+    },
+    decY: (decValue?: number): void => {
+      this.y -= decValue ?? 1;
+    },
+  };
+
+  //key metod
+  public keyInc(key: Key, v?: number) {
+    this[key] += v ?? 1;
+  }
+  public keyDec(key: Key, v?: number): [Key, number] {
+    this[key] -= v ?? 1;
+    return [key, this[key]];
+  }
+
+  //enum metod
+
+  public enumInc(key: Key, v?: number) {
+    this[key as Key] += v ?? 1;
+  }
+
+  public draw = (): number => {
+    return this.x + this.y;
+  };
+
+  public x: number;
+  private y: number;
+}
+
+//behövs inte med class Point
+/* const drawPoint = (point: Point) => {
+  return point.x + point.y;
+}; */
+const point = new Point(5, 5);
+point.inc.incX();
+point.inc.incX();
+point.inc.incX(2);
+point.dec.decX(2);
+point.dec.decX();
+point.dec.decX();
+point.keyInc(Key.x, 1);
+point.enumInc(Key.x, 1);
+console.log(point.draw());
+
+const point2 = new Point(1, 2);
+
+//proxy som ändrar värdet
+const proxy = new Proxy(point2 as any, {
+  get(target, prop) {
+    const value = target[prop as keyof typeof target];
+
+    if (typeof value !== 'function') return value;
+
+    const bound = value.bind(target);
+
+    if (prop === 'keyDec') {
+      return new Proxy(bound, {
+        apply(fn, thisArg, args: [Key, number?]) {
+          // Byt 'x' ↔ 'y' innan vi anropar originalmetoden
+          args[0] = args[0] !== Key.x ? Key.x : Key.y;
+
+          return Reflect.apply(fn, thisArg, args);
+        },
+      });
+    }
+
+    return bound;
+  },
+});
+
+//här blir x y istället, genom proxyn
+console.log("proxy.keyDec('x')", proxy.keyDec('x'));
+console.log(point2.x);
